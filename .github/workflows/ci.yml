@@ -94,6 +94,15 @@ jobs:
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc-5" >> ${GITHUB_ENV}
           echo "QEMU_LD_PREFIX=/usr/aarch64-linux-gnu" >> ${GITHUB_ENV}
 
+      # Install gnu-tar because BSD tar is buggy on Github's macos machines.
+      # https://github.com/actions/cache/issues/403
+      # https://github.com/actions-rs/cargo/issues/111.
+      - name: Install GNU tar
+        if: matrix.build == 'macos'
+        run: |
+          brew install gnu-tar
+          echo "::add-path::/usr/local/opt/gnu-tar/libexec/gnubin"
+
       - name: Write git_submodule_status.txt
         run: git submodule status --recursive > git_submodule_status.txt
 
@@ -116,26 +125,6 @@ jobs:
             hashFiles('Cargo.lock', 'build.rs', 'git_submodule_status.txt') }}
           restore-keys:
             ${{ matrix.config.target }}-${{ matrix.config.variant }}-
-
-
-        # It seems that the 'target' directory does not always get restored
-        # from cache correctly on MacOS. In the build log we see the following:
-        #
-        #   Fresh serde_derive v1.0.115
-        #
-        # But a little while after that Cargo aborts because 'serde_derive' is
-        # now nowhere to be found. We're not the only ones experiencing this,
-        # see https://github.com/actions-rs/cargo/issues/111.
-        #
-        #   error[E0463]: can't find crate for `serde_derive`
-        #   ##[error]   --> /Users/runner/.cargo/registry/src/github.com-
-        #       |           1ecc6299db9ec823/serde-1.0.115/src/lib.rs:285:1
-        #       |
-        #   285 | extern crate serde_derive;
-        #       | ^^^^^^^^^^^^^^^^^^^^^^^^^^ can't find crate
-      - name: Work around MacOS + Cargo + Github Actions cache bug
-        if: runner.os == 'macOS'
-        run: cargo clean -p serde_derive
 
       - name: Install and start sccache
         shell: pwsh
