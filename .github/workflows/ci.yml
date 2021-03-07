@@ -44,7 +44,7 @@ jobs:
           - os: ${{ github.repository == 'denoland/rusty_v8' && 'ubuntu-latest-xl' || 'ubuntu-latest' }}
             target: aarch64-unknown-linux-gnu
             variant: debug
-          
+
           - os: ${{ github.repository == 'denoland/rusty_v8' && 'ubuntu-latest-xl' || 'ubuntu-latest' }}
             target: aarch64-unknown-linux-gnu
             variant: release
@@ -110,7 +110,7 @@ jobs:
             target/*/deps
           key:
             ${{ matrix.config.target }}-${{ matrix.config.variant }}-${{
-            hashFiles('./Cargo.lock', './v8/include/v8-version.h') }}
+            hashFiles('./Cargo.lock', './v8/include/v8-version.h', './build/**', './buildtools/**', './third_party/**') }}
           restore-keys:
             ${{ matrix.config.target }}-${{ matrix.config.variant }}-
 
